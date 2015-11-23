@@ -93,6 +93,8 @@ def doit(solver_name, problem_name, param_file,
         sim.dovis()
 
     while not sim.finished():
+        # apply limiters
+        sim.apply_limiters()
 
         # fill boundary conditions
         sim.cc_data.fill_BC_all()

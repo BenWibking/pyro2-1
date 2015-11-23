@@ -17,8 +17,8 @@ class Variables(object):
     a container class for easy access to the different compressible
     variable by an integer key
     """
-    def __init__(self, idens=-1, ixmom=-1, iymom=-1, iener=-1):
-        self.nvar = 4
+    def __init__(self, idens=-1, ixmom=-1, iymom=-1, iener=-1, igrav=-1):
+        self.nvar = 5
 
         # conserved variables -- we set these when we initialize for
         # they match the CellCenterData2d object
@@ -26,6 +26,7 @@ class Variables(object):
         self.ixmom = ixmom
         self.iymom = iymom
         self.iener = iener
+        self.igrav = igrav
 
         # primitive variables
         self.irho = 0
@@ -56,7 +57,7 @@ class Simulation(NullSimulation):
         my_data.register_var("energy", bc)
         my_data.register_var("x-momentum", bc_xodd)
         my_data.register_var("y-momentum", bc_yodd)
-
+        my_data.register_var("grav", bc_yodd)
 
         # store the EOS gamma as an auxillary quantity so we can have a
         # self-contained object stored in output files to make plots.
@@ -71,7 +72,8 @@ class Simulation(NullSimulation):
         self.vars = Variables(idens = my_data.vars.index("density"),
                               ixmom = my_data.vars.index("x-momentum"),
                               iymom = my_data.vars.index("y-momentum"),
-                              iener = my_data.vars.index("energy"))
+                              iener = my_data.vars.index("energy"),
+                              igrav = my_data.vars.index("grav"))
 
 
         # initial conditions for the problem
@@ -119,6 +121,31 @@ class Simulation(NullSimulation):
         self.dt = cfl*min(xtmp.min(), ytmp.min())
 
 
+    def apply_limiters(self):
+        smalldens = 1.e-10
+        smallp = 1.e-10
+
+        dens = self.cc_data.get_var("density")
+        ymom = self.cc_data.get_var("y-momentum")
+        xmom = self.cc_data.get_var("x-momentum")
+        ener = self.cc_data.get_var("energy")
+
+        gamma = self.cc_data.get_aux("gamma")
+
+        # convert to primitive variables
+        u = xmom.d[:,:]/dens.d[:,:]
+        v = ymom.d[:,:]/dens.d[:,:]
+        e = (ener - 0.5*(xmom**2 + ymom**2)/dens)/dens
+        p = eos.pres(gamma, dens, e)
+
+        # apply floors
+        p.d = p.d.clip(smallp)   # apply a floor to the pressure
+        dens.d = dens.d.clip(smalldens) # apply a floor to the density
+
+        # set the energy using the limited primitive variables
+        ener.d[:,:] = p.d[:,:]/(gamma - 1.0) + \
+                      0.5*dens.d[:,:]*(v**2 + u**2)
+
     def evolve(self):
         """
         Evolve the equations of compressible hydrodynamics through a
@@ -130,9 +157,11 @@ class Simulation(NullSimulation):
 
         dens = self.cc_data.get_var("density")
         ymom = self.cc_data.get_var("y-momentum")
+        xmom = self.cc_data.get_var("x-momentum")
         ener = self.cc_data.get_var("energy")
 
-        grav = self.rp.get_param("compressible.grav")
+        grav = self.cc_data.get_var("grav")
+        # grav = self.rp.get_param("compressible.grav")
 
         myg = self.cc_data.grid
 
@@ -145,16 +174,28 @@ class Simulation(NullSimulation):
         dtdx = self.dt/myg.dx
         dtdy = self.dt/myg.dy
 
-        for n in range(self.vars.nvar):
+        # compute flux at lower boundary
+        print("(before) grav:",grav.d[4,:myg.jlo+1]) # let's check that reflection is working.
+        print("mass fluxes:",np.sum(Flux_y.v(n=self.vars.idens)[:,myg.jlo])) # fluxes are stored on left edge, per unsplitFluxes.py, so this is the flux into the grid along the lower boundary
+
+        for n in range(self.vars.nvar-1):
             var = self.cc_data.get_var_by_index(n)
 
             var.v()[:,:] += \
                 dtdx*(Flux_x.v(n=n) - Flux_x.ip(1, n=n)) + \
                 dtdy*(Flux_y.v(n=n) - Flux_y.jp(1, n=n))
 
+        # check for NaNs
+        if(np.isnan(dens.d).any() or np.isnan(ymom.d).any() \
+           or np.isnan(xmom.d).any() or np.isnan(ener.d).any()):
+            print("NaNs detected in conserved variables! exiting.")
+            exit(1)
+
+        print("(after) grav:",grav.d[4,:myg.jlo+1]) # let's check that reflection is working.
+
         # gravitational source terms
-        ymom.d[:,:] += 0.5*self.dt*(dens.d[:,:] + old_dens.d[:,:])*grav
-        ener.d[:,:] += 0.5*self.dt*(ymom.d[:,:] + old_ymom.d[:,:])*grav
+        ymom.d[:,:] += 0.5*self.dt*(dens.d[:,:] + old_dens.d[:,:])*grav.d[:,:]
+        ener.d[:,:] += 0.5*self.dt*(ymom.d[:,:] + old_ymom.d[:,:])*grav.d[:,:]
 
         # increment the time
         self.cc_data.t += self.dt

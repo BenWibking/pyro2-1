@@ -1,0 +1,58 @@
+# simple inputs files for the four-corner problem.
+
+[driver]
+max_steps = 10000
+tmax = 3.0
+
+
+[io]
+basename = iso_
+n_out = 100
+
+
+[mesh]
+nx = 64
+ny = 192
+xmax = 1.0
+ymax = 3.0
+
+xlboundary = periodic
+xrboundary = periodic
+
+ylboundary = reflect
+yrboundary = reflect
+
+
+[isothermal]
+dens1 = 10.0
+
+amp = 0.25
+sigma = 0.1
+
+cs = 0.316
+
+
+[driver]
+cfl = 0.8
+
+
+[eos]
+gamma = 1.001    ; pres = rho ener (gamma - 1)
+
+
+[compressible]
+use_flattening = 1        ; apply flattening at shocks (1)
+
+z0 = 0.75                 ; flattening z0 parameter
+z1 = 0.85                 ; flattening z1 parameter
+delta = 0.33              ; flattening delta parameter
+
+cvisc = 0.0               ; artifical viscosity coefficient
+
+limiter = 2               ; limiter (0 = none, 1 = 2nd order, 2 = 4th order)
+
+grav = 0.0                ; gravitational acceleration (in y-direction)
+
+riemann = HLLC            ; HLLC or CGF
+
+

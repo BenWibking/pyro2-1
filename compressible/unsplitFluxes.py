@@ -180,6 +180,7 @@ def unsplitFluxes(my_data, rp, vars, tc, dt):
     xmom = my_data.get_var("x-momentum")
     ymom = my_data.get_var("y-momentum")
     ener = my_data.get_var("energy")
+    grav = my_data.get_var("grav")
 
     r = dens
 
@@ -193,7 +194,7 @@ def unsplitFluxes(my_data, rp, vars, tc, dt):
     p = eos.pres(gamma, dens, e)
 
     smallp = 1.e-10
-    p.d = p.d.clip(smallp)   # apply a floor to the pressure
+    #p.d = p.d.clip(smallp)   # apply a floor to the pressure
 
 
     #=========================================================================
@@ -317,23 +318,23 @@ def unsplitFluxes(my_data, rp, vars, tc, dt):
     #=========================================================================
     # apply source terms
     #=========================================================================
-    grav = rp.get_param("compressible.grav")
+    # grav = rp.get_param("compressible.grav")
 
     # ymom_xl[i,j] += 0.5*dt*dens[i-1,j]*grav
-    U_xl.v(buf=1, n=vars.iymom)[:,:] += 0.5*dt*dens.ip(-1, buf=1)*grav
-    U_xl.v(buf=1, n=vars.iener)[:,:] += 0.5*dt*ymom.ip(-1, buf=1)*grav
+    U_xl.v(buf=1, n=vars.iymom)[:,:] += 0.5*dt*dens.ip(-1, buf=1)*grav.ip(-1, buf=1)
+    U_xl.v(buf=1, n=vars.iener)[:,:] += 0.5*dt*ymom.ip(-1, buf=1)*grav.ip(-1, buf=1)
 
     # ymom_xr[i,j] += 0.5*dt*dens[i,j]*grav
-    U_xr.v(buf=1, n=vars.iymom)[:,:] += 0.5*dt*dens.v(buf=1)*grav
-    U_xr.v(buf=1, n=vars.iener)[:,:] += 0.5*dt*ymom.v(buf=1)*grav
+    U_xr.v(buf=1, n=vars.iymom)[:,:] += 0.5*dt*dens.v(buf=1)*grav.v(buf=1)
+    U_xr.v(buf=1, n=vars.iener)[:,:] += 0.5*dt*ymom.v(buf=1)*grav.v(buf=1)
 
     # ymom_yl[i,j] += 0.5*dt*dens[i,j-1]*grav
-    U_yl.v(buf=1, n=vars.iymom)[:,:] += 0.5*dt*dens.jp(-1, buf=1)*grav
-    U_yl.v(buf=1, n=vars.iener)[:,:] += 0.5*dt*ymom.jp(-1, buf=1)*grav
+    U_yl.v(buf=1, n=vars.iymom)[:,:] += 0.5*dt*dens.jp(-1, buf=1)*grav.jp(-1, buf=1)
+    U_yl.v(buf=1, n=vars.iener)[:,:] += 0.5*dt*ymom.jp(-1, buf=1)*grav.jp(-1, buf=1)
 
     # ymom_yr[i,j] += 0.5*dt*dens[i,j]*grav
-    U_yr.v(buf=1, n=vars.iymom)[:,:] += 0.5*dt*dens.v(buf=1)*grav
-    U_yr.v(buf=1, n=vars.iener)[:,:] += 0.5*dt*ymom.v(buf=1)*grav
+    U_yr.v(buf=1, n=vars.iymom)[:,:] += 0.5*dt*dens.v(buf=1)*grav.v(buf=1)
+    U_yr.v(buf=1, n=vars.iener)[:,:] += 0.5*dt*ymom.v(buf=1)*grav.v(buf=1)
 
 
     #=========================================================================
