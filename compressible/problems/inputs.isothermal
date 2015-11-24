@@ -32,7 +32,7 @@ dens1 = 10.0
 amp = 0.5
 nwaves = 4
 
-cs = 0.316
+cs = 0.1
 
 
 [driver]

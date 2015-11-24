@@ -44,7 +44,8 @@ def init_data(my_data, rp):
 
     print("scale height:",scale_height)
 
-    smalldens = 1.e-10
+    smallpres = 1.e-10
+    smalldens = smallpres/(cs**2)
 
     # initialize the components, remember, that ener here is
     # rho*eint + 0.5*rho*v**2, where eint is the specific

@@ -145,8 +145,13 @@ class Simulation(NullSimulation):
 
 
     def apply_limiters(self):
-        smalldens = 1.e-10
+        # *must* set pressure floor to be consistent with isothermal eos & density floor!
+        # (otherwise the sound speed acquires variations just due to action of the floors)
+
+        cs = self.rp.get_param("isothermal.cs")
+
         smallp = 1.e-10
+        smalldens = smallp/(cs**2)
 
         dens = self.cc_data.get_var("density")
         ymom = self.cc_data.get_var("y-momentum")
