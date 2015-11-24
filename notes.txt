@@ -1,0 +1,3 @@
+* mass outflow fixed, thanks to Mike Zingale's fixes to CGF solver
+* isothermal atmospheres are tricky! the density floor has to be consistent with the isothermality assumption, or else a strictly isothermal solver has to be used
+* also, don't trust the behavior where the density gradient is unresolved.
