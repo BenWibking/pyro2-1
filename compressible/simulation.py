@@ -321,14 +321,15 @@ class Simulation(NullSimulation):
             onLeft = [0,2]
 
 
-        fields = [dens, magvel, p, e]
-        field_names = [r"$\rho$", r"U", "p", "e"]
+        fields = [np.log10(dens.v()), magvel.v(), dens.v(), e.v()]
+        fields = [np.transpose(f) for f in fields]
+        field_names = [r"$\log \rho$", r"U", r"$\rho$", "e"]
 
         for n in range(4):
             ax = axes.flat[n]
 
             v = fields[n]
-            img = ax.imshow(np.transpose(v.v()),
+            img = ax.imshow(v,
                         interpolation="nearest", origin="lower",
                         extent=[myg.xmin, myg.xmax, myg.ymin, myg.ymax])
 
