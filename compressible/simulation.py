@@ -135,7 +135,7 @@ class Simulation(NullSimulation):
 
         # compute the sounds speed
         cs = np.sqrt(gamma*p/dens)
-
+        print("sound speed:",cs.min(),cs.max())
 
         # the timestep is min(dx/(|u| + cs), dy/(|v| + cs))
         xtmp = self.cc_data.grid.dx/(abs(u) + cs)
@@ -198,7 +198,10 @@ class Simulation(NullSimulation):
         dtdy = self.dt/myg.dy
 
         # compute flux at lower boundary
-        print("mass fluxes:",np.sum(Flux_y.v(n=self.vars.idens)[:,myg.jlo])) # fluxes are stored on left edge, per unsplitFluxes.py, so this is the flux into the grid along the lower boundary
+        print("density fluxes:",np.sum(Flux_y.v(n=self.vars.idens)[myg.ilo:myg.ihi+1,myg.jlo])*dtdy) # fluxes are stored on left edge, per unsplitFluxes.py, so this is the flux into the grid along the lower boundary
+        print("density fluxes (x):",np.sum(Flux_x.v(n=self.vars.idens)[myg.ilo:myg.ihi+1,myg.jlo])*dtdy) # fluxes are stored on left edge, per unsplitFluxes.py, so this is the flux into the grid along the lower boundary
+        print("density fluxes:",np.sum(Flux_y.jp(1, n=self.vars.idens)[myg.ilo:myg.ihi+1,myg.jlo])*dtdy) # fluxes are stored on left edge, per unsplitFluxes.py, so this is the flux into the grid along the lower boundary
+        print("density fluxes (x):",np.sum(Flux_x.ip(1, n=self.vars.idens)[myg.ilo:myg.ihi+1,myg.jlo])*dtdy) # fluxes are stored on left edge, per unsplitFluxes.py, so this is the flux into the grid along the lower boundary
 
         for n in range(self.vars.nvar-1):
             var = self.cc_data.get_var_by_index(n)
@@ -206,6 +209,11 @@ class Simulation(NullSimulation):
             var.v()[:,:] += \
                 dtdx*(Flux_x.v(n=n) - Flux_x.ip(1, n=n)) + \
                 dtdy*(Flux_y.v(n=n) - Flux_y.jp(1, n=n))
+
+        print("total dens:",np.sum(dens.d[myg.ilo:myg.ihi+1,myg.jlo:myg.jhi+1])*myg.dx*myg.dy)
+        print("total xmom:",np.sum(xmom.d[myg.ilo:myg.ihi+1,myg.jlo:myg.jhi+1])*myg.dx*myg.dy)
+        print("total ymom:",np.sum(ymom.d[myg.ilo:myg.ihi+1,myg.jlo:myg.jhi+1])*myg.dx*myg.dy)
+        print("total ener:",np.sum(ener.d[myg.ilo:myg.ihi+1,myg.jlo:myg.jhi+1])*myg.dx*myg.dy)
 
         # check for NaNs
         if(np.isnan(dens.d).any() or np.isnan(ymom.d).any() \
@@ -222,6 +230,8 @@ class Simulation(NullSimulation):
         self.n += 1
 
         tm_evolve.end()
+
+        print("")
 
 
     def dovis(self):

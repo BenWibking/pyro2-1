@@ -41,6 +41,8 @@ def init_data(my_data, rp):
 
     print("scale height:",scale_height)
 
+    smalldens = 1.e-8
+
     # initialize the components, remember, that ener here is
     # rho*eint + 0.5*rho*v**2, where eint is the specific
     # internal energy (erg/g)
@@ -54,7 +56,8 @@ def init_data(my_data, rp):
     p = myg.scratch_array()
 
     dens.d[:,:] = dens1*numpy.exp(-myg.y2d/scale_height)
-    p.d[:,:] = dens.d*cs*cs/gamma
+    dens.d[dens.d < smalldens] = smalldens
+    p.d[:,:] = dens.d * cs**2 / gamma
 
     # set the energy (P = cs2*dens)
     ener.d[:,:] = p.d[:,:]/(gamma - 1.0) + \

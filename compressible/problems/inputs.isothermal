@@ -12,9 +12,9 @@ n_out = 100
 
 [mesh]
 nx = 64
-ny = 192
+ny = 128
 xmax = 1.0
-ymax = 3.0
+ymax = 2.0
 
 xlboundary = periodic
 xrboundary = periodic
@@ -29,7 +29,7 @@ dens1 = 10.0
 amp = 0.25
 sigma = 0.1
 
-cs = 0.316
+cs = 1.0
 
 
 [driver]
@@ -37,7 +37,7 @@ cfl = 0.8
 
 
 [eos]
-gamma = 1.001    ; pres = rho ener (gamma - 1)
+gamma = 1.01    ; pres = rho ener (gamma - 1)
 
 
 [compressible]
