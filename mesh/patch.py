@@ -40,7 +40,7 @@ import pickle
 from util import msg
 
 # keep track of whether the BCs are solid walls (passed into the
-# Riemann solver).  
+# Riemann solver).
 bc_props = {}
 bc_props["outflow"] = False
 bc_props["periodic"] = False

@@ -23,7 +23,6 @@ def init_data(my_data, rp):
     xmom = my_data.get_var("x-momentum")
     ymom = my_data.get_var("y-momentum")
     ener = my_data.get_var("energy")
-    grav = my_data.get_var("grav")
 
     gamma = rp.get_param("eos.gamma")
 
@@ -48,7 +47,6 @@ def init_data(my_data, rp):
     xmom.d[:,:] = 0.0
     ymom.d[:,:] = 0.0
     dens.d[:,:] = 0.0
-    grav.d[:,:] = grav_const # this will be reflected via the boundary conditions routines
 
     # set the density to be stratified in the y-direction
     myg = my_data.grid

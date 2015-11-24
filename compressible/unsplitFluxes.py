@@ -180,7 +180,6 @@ def unsplitFluxes(my_data, my_aux, rp, vars, solid, tc, dt):
     xmom = my_data.get_var("x-momentum")
     ymom = my_data.get_var("y-momentum")
     ener = my_data.get_var("energy")
-    grav = my_data.get_var("grav")
 
     r = dens
 
@@ -315,7 +314,7 @@ def unsplitFluxes(my_data, my_aux, rp, vars, solid, tc, dt):
     #=========================================================================
     # apply source terms
     #=========================================================================
-    # grav = rp.get_param("compressible.grav")
+    grav = rp.get_param("compressible.grav")
 
     ymom_src = my_aux.get_var("ymom_src")
     ymom_src.v()[:,:] = dens.v()*grav

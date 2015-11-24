@@ -17,8 +17,8 @@ class Variables(object):
     a container class for easy access to the different compressible
     variable by an integer key
     """
-    def __init__(self, idens=-1, ixmom=-1, iymom=-1, iener=-1, igrav=-1):
-        self.nvar = 5
+    def __init__(self, idens=-1, ixmom=-1, iymom=-1, iener=-1):
+        self.nvar = 4
 
         # conserved variables -- we set these when we initialize for
         # they match the CellCenterData2d object
@@ -26,7 +26,6 @@ class Variables(object):
         self.ixmom = ixmom
         self.iymom = iymom
         self.iener = iener
-        self.igrav = igrav
 
         # primitive variables
         self.irho = 0
@@ -75,7 +74,6 @@ class Simulation(NullSimulation):
         my_data.register_var("energy", bc)
         my_data.register_var("x-momentum", bc_xodd)
         my_data.register_var("y-momentum", bc_yodd)
-        my_data.register_var("grav", bc_yodd)
 
         # store the EOS gamma as an auxillary quantity so we can have a
         # self-contained object stored in output files to make plots.
@@ -98,8 +96,7 @@ class Simulation(NullSimulation):
         self.vars = Variables(idens = my_data.vars.index("density"),
                               ixmom = my_data.vars.index("x-momentum"),
                               iymom = my_data.vars.index("y-momentum"),
-                              iener = my_data.vars.index("energy"),
-                              igrav = my_data.vars.index("grav"))
+                              iener = my_data.vars.index("energy"))
 
 
         # initial conditions for the problem
@@ -186,8 +183,7 @@ class Simulation(NullSimulation):
         xmom = self.cc_data.get_var("x-momentum")
         ener = self.cc_data.get_var("energy")
 
-        grav = self.cc_data.get_var("grav")
-        # grav = self.rp.get_param("compressible.grav")
+        grav = self.rp.get_param("compressible.grav")
 
         myg = self.cc_data.grid
 
@@ -202,7 +198,6 @@ class Simulation(NullSimulation):
         dtdy = self.dt/myg.dy
 
         # compute flux at lower boundary
-        print("(before) grav:",grav.d[4,:myg.jlo+1]) # let's check that reflection is working.
         print("mass fluxes:",np.sum(Flux_y.v(n=self.vars.idens)[:,myg.jlo])) # fluxes are stored on left edge, per unsplitFluxes.py, so this is the flux into the grid along the lower boundary
 
         for n in range(self.vars.nvar-1):
@@ -218,11 +213,9 @@ class Simulation(NullSimulation):
             print("NaNs detected in conserved variables! exiting.")
             exit(1)
 
-        print("(after) grav:",grav.d[4,:myg.jlo+1]) # let's check that reflection is working.
-
         # gravitational source terms
-        ymom.d[:,:] += 0.5*self.dt*(dens.d[:,:] + old_dens.d[:,:])*grav.d[:,:]
-        ener.d[:,:] += 0.5*self.dt*(ymom.d[:,:] + old_ymom.d[:,:])*grav.d[:,:]
+        ymom.d[:,:] += 0.5*self.dt*(dens.d[:,:] + old_dens.d[:,:])*grav
+        ener.d[:,:] += 0.5*self.dt*(ymom.d[:,:] + old_ymom.d[:,:])*grav
 
         # increment the time
         self.cc_data.t += self.dt
