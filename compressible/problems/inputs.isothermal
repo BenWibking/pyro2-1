@@ -1,8 +1,8 @@
 # simple inputs files for the four-corner problem.
 
 [driver]
-max_steps = 10000
-tmax = 3.0
+max_steps = 50000
+tmax = 10.0
 
 
 [io]
@@ -21,6 +21,8 @@ xrboundary = periodic
 
 ylboundary = reflect
 yrboundary = reflect
+# yrboundary = outflow
+# prevents weak waves from sloshing in the box, but also allows supersonic infall at late times
 
 
 [isothermal]
@@ -29,7 +31,7 @@ dens1 = 10.0
 amp = 0.25
 sigma = 0.1
 
-cs = 1.0
+cs = 0.316
 
 
 [driver]
@@ -37,7 +39,7 @@ cfl = 0.8
 
 
 [eos]
-gamma = 1.01    ; pres = rho ener (gamma - 1)
+gamma = 1.001    ; pres = rho ener (gamma - 1)
 
 
 [compressible]

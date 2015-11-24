@@ -193,7 +193,7 @@ def unsplitFluxes(my_data, my_aux, rp, vars, solid, tc, dt):
     p = eos.pres(gamma, dens, e)
 
     smallp = 1.e-10
-    #p.d = p.d.clip(smallp)   # apply a floor to the pressure
+    p.d = p.d.clip(smallp)   # apply a floor to the pressure
 
 
     #=========================================================================

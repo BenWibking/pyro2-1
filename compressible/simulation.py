@@ -163,7 +163,12 @@ class Simulation(NullSimulation):
 
         # apply floors
         p.d = p.d.clip(smallp)   # apply a floor to the pressure
-        dens.d = dens.d.clip(smalldens) # apply a floor to the density
+        newdens = dens.d.clip(smalldens) # apply a floor to the density
+        dens_added = np.sum(newdens-dens.d)
+        print("density added due to floor:",dens_added)
+
+        # set the density
+        dens.d[:,:] = newdens
 
         # set the energy using the limited primitive variables
         ener.d[:,:] = p.d[:,:]/(gamma - 1.0) + \
@@ -199,11 +204,11 @@ class Simulation(NullSimulation):
 
         # compute flux at lower boundary
         print("density fluxes:",np.sum(Flux_y.v(n=self.vars.idens)[myg.ilo:myg.ihi+1,myg.jlo])*dtdy) # fluxes are stored on left edge, per unsplitFluxes.py, so this is the flux into the grid along the lower boundary
-        print("density fluxes (x):",np.sum(Flux_x.v(n=self.vars.idens)[myg.ilo:myg.ihi+1,myg.jlo])*dtdy) # fluxes are stored on left edge, per unsplitFluxes.py, so this is the flux into the grid along the lower boundary
+        #print("density fluxes (x):",np.sum(Flux_x.v(n=self.vars.idens)[myg.ilo:myg.ihi+1,myg.jlo])*dtdy) # fluxes are stored on left edge, per unsplitFluxes.py, so this is the flux into the grid along the lower boundary
         print("density fluxes:",np.sum(Flux_y.jp(1, n=self.vars.idens)[myg.ilo:myg.ihi+1,myg.jlo])*dtdy) # fluxes are stored on left edge, per unsplitFluxes.py, so this is the flux into the grid along the lower boundary
-        print("density fluxes (x):",np.sum(Flux_x.ip(1, n=self.vars.idens)[myg.ilo:myg.ihi+1,myg.jlo])*dtdy) # fluxes are stored on left edge, per unsplitFluxes.py, so this is the flux into the grid along the lower boundary
+        #print("density fluxes (x):",np.sum(Flux_x.ip(1, n=self.vars.idens)[myg.ilo:myg.ihi+1,myg.jlo])*dtdy) # fluxes are stored on left edge, per unsplitFluxes.py, so this is the flux into the grid along the lower boundary
 
-        for n in range(self.vars.nvar-1):
+        for n in range(self.vars.nvar):
             var = self.cc_data.get_var_by_index(n)
 
             var.v()[:,:] += \

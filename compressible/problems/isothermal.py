@@ -41,7 +41,7 @@ def init_data(my_data, rp):
 
     print("scale height:",scale_height)
 
-    smalldens = 1.e-8
+    smalldens = 1.e-10
 
     # initialize the components, remember, that ener here is
     # rho*eint + 0.5*rho*v**2, where eint is the specific
@@ -57,7 +57,7 @@ def init_data(my_data, rp):
 
     dens.d[:,:] = dens1*numpy.exp(-myg.y2d/scale_height)
     dens.d[dens.d < smalldens] = smalldens
-    p.d[:,:] = dens.d * cs**2 / gamma
+    p.d[:,:] = dens.d * cs**2
 
     # set the energy (P = cs2*dens)
     ener.d[:,:] = p.d[:,:]/(gamma - 1.0) + \
