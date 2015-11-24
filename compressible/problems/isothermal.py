@@ -32,7 +32,10 @@ def init_data(my_data, rp):
     dens1 = rp.get_param("isothermal.dens1")
 
     amp = rp.get_param("isothermal.amp")
-    sigma = rp.get_param("isothermal.sigma")
+    nwaves = rp.get_param("isothermal.nwaves")
+
+    xmax = rp.get_param("mesh.xmax")
+    ymax = rp.get_param("mesh.ymax")
 
     if grav_const != 0.0:
         scale_height = cs*cs/numpy.abs(grav_const)
@@ -58,6 +61,16 @@ def init_data(my_data, rp):
     dens.d[:,:] = dens1*numpy.exp(-myg.y2d/scale_height)
     dens.d[dens.d < smalldens] = smalldens
     p.d[:,:] = dens.d * cs**2
+
+    # set the velocity perturbations
+    u = 0.
+
+    A = amp*numpy.random.rand(dens.d.shape[0],dens.d.shape[1])
+    v = A*(1+numpy.cos(nwaves*numpy.pi*myg.x2d/xmax))*0.5
+
+    # set the momenta
+    xmom.d[:,:] = dens.d * u
+    ymom.d[:,:] = dens.d * v
 
     # set the energy (P = cs2*dens)
     ener.d[:,:] = p.d[:,:]/(gamma - 1.0) + \

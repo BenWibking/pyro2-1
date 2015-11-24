@@ -2,7 +2,7 @@
 dens1 = 10.0
 
 amp = 1.0
-sigma = 0.1
+nwaves = 4.0
 
 cs = 0.1
 
