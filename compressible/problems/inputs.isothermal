@@ -11,8 +11,8 @@ n_out = 100
 
 
 [mesh]
-nx = 64
-ny = 128
+nx = 128
+ny = 256
 xmax = 1.0
 ymax = 2.0
 
@@ -21,6 +21,7 @@ xrboundary = periodic
 
 ylboundary = reflect
 yrboundary = reflect
+
 # yrboundary = outflow
 # prevents weak waves from sloshing in the box, but also allows supersonic infall at late times
 
@@ -35,7 +36,7 @@ cs = 0.316
 
 
 [driver]
-cfl = 0.8
+cfl = 0.5
 
 
 [eos]
@@ -44,11 +45,6 @@ gamma = 1.001    ; pres = rho ener (gamma - 1)
 
 [compressible]
 use_flattening = 0        ; apply flattening at shocks (1)
-
-z0 = 0.75                 ; flattening z0 parameter
-z1 = 0.85                 ; flattening z1 parameter
-delta = 0.33              ; flattening delta parameter
-
 cvisc = 0.0               ; artifical viscosity coefficient
 
 limiter = 2               ; limiter (0 = none, 1 = 2nd order, 2 = 4th order)
