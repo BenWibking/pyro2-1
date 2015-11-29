@@ -1,3 +1,6 @@
 * mass outflow fixed, thanks to Mike Zingale's fixes to CGF solver
 * isothermal atmospheres are tricky! the density floor has to be consistent with the isothermality assumption, or else a strictly isothermal solver has to be used
 * also, don't trust the behavior where the density gradient is unresolved.
+
+* tends to crash when apply_limiters() is disabled.
+* might be a good idea to limit timestep to ensure that source terms don't push us below the pressure floor.
