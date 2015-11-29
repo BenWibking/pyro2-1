@@ -7,5 +7,5 @@ y_pert = 2.0
 r_pert = 0.25
 pert_amplitude_factor = 5.0
 
-dens_cutoff  = 0.01
+dens_cutoff  = 0.0001
 

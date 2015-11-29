@@ -20,7 +20,7 @@ xlboundary = outflow
 xrboundary = outflow
 
 ylboundary = reflect
-yrboundary = reflect
+yrboundary = outflow
 
 
 [bubble]
@@ -37,4 +37,6 @@ pert_amplitude_factor = 2.0
 grav = -2.0
 
 limiter = 2
+
+riemann = CGF            ; HLLC or CGF
 

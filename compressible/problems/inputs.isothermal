@@ -7,14 +7,14 @@ tmax = 10.0
 
 [io]
 basename = iso_
-n_out = 100
-
+n_out = 10000
+dt_out = 0.01
 
 [mesh]
 nx = 128
 ny = 256
-xmax = 1.0
-ymax = 2.0
+xmax = .1
+ymax = .2
 
 xlboundary = periodic
 xrboundary = periodic
@@ -23,7 +23,7 @@ ylboundary = reflect
 yrboundary = reflect
 
 # yrboundary = outflow
-# prevents weak waves from sloshing in the box, but also allows supersonic infall at late times
+# prevents weak waves from sloshing in the box, but also allows supersonic infall at late times (if density gradient is unresolved)
 
 
 [isothermal]

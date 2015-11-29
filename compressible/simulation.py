@@ -89,7 +89,7 @@ class Simulation(NullSimulation):
         # really part of the main solution
         aux_data = patch.CellCenterData2d(my_grid)
         aux_data.register_var("yacc_src", bc_yodd)
-        #aux_data.register_var("E_src", bc)
+        aux_data.register_var("xacc_src", bc_xodd)
         aux_data.create()
         self.aux_data = aux_data
 
@@ -176,8 +176,27 @@ class Simulation(NullSimulation):
         dens.d[:,:] = newdens
 
         # set the energy using the limited primitive variables
+        # (should only do this for cells affected by the pressure or density limiter)
         ener.d[:,:] = p.d[:,:]/(gamma - 1.0) + \
                       0.5*dens.d[:,:]*(v**2 + u**2)
+
+    def preevolve(self):
+        """
+        Initialize the source terms.
+        """
+        dens = self.cc_data.get_var("density")
+        ymom = self.cc_data.get_var("y-momentum")
+        xmom = self.cc_data.get_var("x-momentum")
+        ener = self.cc_data.get_var("energy")
+
+        grav = self.rp.get_param("compressible.grav")
+
+        yacc_src = self.aux_data.get_var("yacc_src")
+        xacc_src = self.aux_data.get_var("xacc_src")
+
+        yacc_src.v()[:,:] = grav
+        xacc_src.v()[:,:] = 0.
+
 
     def evolve(self):
         """
@@ -195,6 +214,9 @@ class Simulation(NullSimulation):
 
         grav = self.rp.get_param("compressible.grav")
 
+        yacc_src = self.aux_data.get_var("yacc_src")
+        xacc_src = self.aux_data.get_var("xacc_src")
+
         myg = self.cc_data.grid
 
         Flux_x, Flux_y = unsplitFluxes(self.cc_data, self.aux_data, self.rp, 
@@ -202,6 +224,8 @@ class Simulation(NullSimulation):
 
         old_dens = dens.copy()
         old_ymom = ymom.copy()
+        old_yacc_src = yacc_src.copy()
+        old_xacc_src = xacc_src.copy()
 
         # conservative update
         dtdx = self.dt/myg.dx
@@ -209,9 +233,7 @@ class Simulation(NullSimulation):
 
         # compute flux at lower boundary
         print("density fluxes:",np.sum(Flux_y.v(n=self.vars.idens)[myg.ilo:myg.ihi+1,myg.jlo])*dtdy) # fluxes are stored on left edge, per unsplitFluxes.py, so this is the flux into the grid along the lower boundary
-        #print("density fluxes (x):",np.sum(Flux_x.v(n=self.vars.idens)[myg.ilo:myg.ihi+1,myg.jlo])*dtdy) # fluxes are stored on left edge, per unsplitFluxes.py, so this is the flux into the grid along the lower boundary
-        print("density fluxes:",np.sum(Flux_y.jp(1, n=self.vars.idens)[myg.ilo:myg.ihi+1,myg.jlo])*dtdy) # fluxes are stored on left edge, per unsplitFluxes.py, so this is the flux into the grid along the lower boundary
-        #print("density fluxes (x):",np.sum(Flux_x.ip(1, n=self.vars.idens)[myg.ilo:myg.ihi+1,myg.jlo])*dtdy) # fluxes are stored on left edge, per unsplitFluxes.py, so this is the flux into the grid along the lower boundary
+        print("density fluxes:",np.sum(Flux_y.jp(-1, n=self.vars.idens)[myg.ilo:myg.ihi+1,myg.jlo])*dtdy) # fluxes are stored on left edge, per unsplitFluxes.py, so this is the flux into the grid along the lower boundary
 
         for n in range(self.vars.nvar):
             var = self.cc_data.get_var_by_index(n)
@@ -231,23 +253,31 @@ class Simulation(NullSimulation):
             print("NaNs detected in conserved variables! exiting.")
             exit(1)
 
-        # gravitational source terms
-        mom_update = 0.5*self.dt*(dens.d[:,:] + old_dens.d[:,:])*grav
-        ymom.d[:,:] += mom_update
+        ## gravitational source terms
 
-        print("y-momentum update:",np.sum(mom_update))
+        # compute new body forces (could be modified for self-gravity, etc.)
+        yacc_src.v()[:,:] = grav
+        xacc_src.v()[:,:] = 0.
 
-        # TODO: energy update must be replaced with an expression involving the computed mass fluxes
-        #       in order to be second-order accurate:
-        # N.B.: if grav is time-dependent, then grav must be averaged over the timestep here.
-        energy_update = 0.5*dtdy*(Flux_y.v(n=self.vars.idens) + Flux_y.jp(1,n=self.vars.idens))*grav*myg.dy
+        # update the conserved hydro variables
+        ymom_update = 0.5*self.dt*(dens.d[:,:]*yacc_src.d[:,:] + old_dens.d[:,:]*old_yacc_src.d[:,:])
+        ymom.d[:,:] += ymom_update
+
+        xmom_update = 0.5*self.dt*(dens.d[:,:]*xacc_src.d[:,:] + old_dens.d[:,:]*old_xacc_src.d[:,:])
+        xmom.d[:,:] += xmom_update
+
+        print("y-momentum update:",np.sum(ymom_update))
+        print("x-momentum update:",np.sum(xmom_update))
+
+        energy_update  = 0.5*dtdy*(Flux_y.v(n=self.vars.idens) + Flux_y.jp(1,n=self.vars.idens)) * \
+                         0.5*(old_yacc_src.v() + yacc_src.v())*myg.dy
+
+        energy_update += 0.5*dtdx*(Flux_x.v(n=self.vars.idens) + Flux_x.ip(1,n=self.vars.idens)) * \
+                         0.5*(old_xacc_src.v() + xacc_src.v())*myg.dx
+
         ener.v()[:,:] += energy_update
         
-        bad_energy_update=0.5*self.dt*(ymom.d[:,:] + old_ymom.d[:,:])*grav
-        #ener.d[:,:] += bad_energy_update
-        
         print("energy update:",np.sum(energy_update))
-        print("old (bad) energy update (not used):",np.sum(bad_energy_update))
 
         # increment the time
         self.cc_data.t += self.dt

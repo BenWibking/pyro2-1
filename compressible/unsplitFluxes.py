@@ -172,10 +172,11 @@ def unsplitFluxes(my_data, my_aux, rp, vars, solid, tc, dt):
     gamma = rp.get_param("eos.gamma")
 
     # compute gravity source terms
-    grav = rp.get_param("compressible.grav")
     yacc_src = my_aux.get_var("yacc_src")
-    yacc_src.v()[:,:] = grav
+    xacc_src = my_aux.get_var("xacc_src")
+
     my_aux.fill_BC("yacc_src")
+    my_aux.fill_BC("xacc_src")
 
 
     #=========================================================================
@@ -267,10 +268,10 @@ def unsplitFluxes(my_data, my_aux, rp, vars, solid, tc, dt):
 
 
     # add source terms in primitive variables
-    #V_l[:,:,vars.iu] += 0.5*dt*0.5*(xacc_src.ip(-1,buf=1)+xacc_src.v(buf=1))
+    V_l[1:,:,vars.iu] += 0.5*dt*0.5*(xacc_src.d[0:-1,:]+xacc_src.d[1:,:])
     V_l[1:,:,vars.iv] += 0.5*dt*0.5*(yacc_src.d[0:-1,:]+yacc_src.d[1:,:])
 
-    #V_r[:,:,vars.iu] += 0.5*dt*0.5*(xacc_src.ip(1,buf=1)+xacc_src.v(buf=1))
+    V_r[1:-1,:,vars.iu] += 0.5*dt*0.5*(xacc_src.d[2:,:]+xacc_src.d[1:-1,:])
     V_r[1:-1,:,vars.iv] += 0.5*dt*0.5*(yacc_src.d[2:,:]+yacc_src.d[1:-1,:])
 
 
@@ -310,10 +311,10 @@ def unsplitFluxes(my_data, my_aux, rp, vars, solid, tc, dt):
 
     
     # add source terms in primitive variables
-    #V_l[:,:,vars.iu] += 0.5*dt*0.5*(xacc_src.jp(-1,buf=1)+xacc_src.v(buf=1))
+    V_l[:,1:,vars.iu] += 0.5*dt*0.5*(xacc_src.d[:,0:-1]+xacc_src.d[:,1:])
     V_l[:,1:,vars.iv] += 0.5*dt*0.5*(yacc_src.d[:,0:-1]+yacc_src.d[:,1:])
 
-    #V_r[:,:,vars.iu] += 0.5*dt*0.5*(xacc_src.jp(1,buf=1)+xacc_src.v(buf=1))
+    V_r[:,1:-1,vars.iu] += 0.5*dt*0.5*(xacc_src.d[:,2:]+xacc_src.d[:,1:-1])
     V_r[:,1:-1,vars.iv] += 0.5*dt*0.5*(yacc_src.d[:,2:]+yacc_src.d[:,1:-1])
 
 
@@ -332,31 +333,6 @@ def unsplitFluxes(my_data, my_aux, rp, vars, solid, tc, dt):
     U_yr.d[:,:,vars.iymom] = V_r[:,:,vars.irho]*V_r[:,:,vars.iv]
     U_yr.d[:,:,vars.iener] = eos.rhoe(gamma, V_r[:,:,vars.ip]) + \
         0.5*V_r[:,:,vars.irho]*(V_r[:,:,vars.iu]**2 + V_r[:,:,vars.iv]**2)
-
-
-    #=========================================================================
-    # apply source terms (obsolete, now done in primitive variables)
-    #=========================================================================
-
-    #E_src = my_aux.get_var("E_src")
-    #E_src.v()[:,:] = ymom.v()*grav
-    #my_aux.fill_BC("E_src")
-
-    # ymom_xl[i,j] += 0.5*dt*dens[i-1,j]*grav
-    #U_xl.v(buf=1, n=vars.iymom)[:,:] += 0.5*dt*ymom_src.ip(-1, buf=1)
-    #U_xl.v(buf=1, n=vars.iener)[:,:] += 0.5*dt*E_src.ip(-1, buf=1)
-
-    # ymom_xr[i,j] += 0.5*dt*dens[i,j]*grav
-    #U_xr.v(buf=1, n=vars.iymom)[:,:] += 0.5*dt*ymom_src.v(buf=1)
-    #U_xr.v(buf=1, n=vars.iener)[:,:] += 0.5*dt*E_src.v(buf=1)
-
-    # ymom_yl[i,j] += 0.5*dt*dens[i,j-1]*grav
-    #U_yl.v(buf=1, n=vars.iymom)[:,:] += 0.5*dt*ymom_src.jp(-1, buf=1)
-    #U_yl.v(buf=1, n=vars.iener)[:,:] += 0.5*dt*E_src.jp(-1, buf=1)
-
-    # ymom_yr[i,j] += 0.5*dt*dens[i,j]*grav
-    #U_yr.v(buf=1, n=vars.iymom)[:,:] += 0.5*dt*ymom_src.v(buf=1)
-    #U_yr.v(buf=1, n=vars.iener)[:,:] += 0.5*dt*E_src.v(buf=1)
 
 
     #=========================================================================
