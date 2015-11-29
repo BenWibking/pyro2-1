@@ -10,7 +10,7 @@ import mesh.patch as patch
 from simulation_null import NullSimulation, grid_setup, bc_setup
 from compressible.unsplitFluxes import *
 from util import profile
-
+import body_forces as body_forces
 
 class Variables(object):
     """
@@ -184,18 +184,12 @@ class Simulation(NullSimulation):
         """
         Initialize the source terms.
         """
-        dens = self.cc_data.get_var("density")
-        ymom = self.cc_data.get_var("y-momentum")
-        xmom = self.cc_data.get_var("x-momentum")
-        ener = self.cc_data.get_var("energy")
-
-        grav = self.rp.get_param("compressible.grav")
-
         yacc_src = self.aux_data.get_var("yacc_src")
         xacc_src = self.aux_data.get_var("xacc_src")
 
-        yacc_src.v()[:,:] = grav
-        xacc_src.v()[:,:] = 0.
+        xacc, yacc = body_forces.compute(self.cc_data, self.rp)
+        yacc_src.v()[:,:] = yacc.v()
+        xacc_src.v()[:,:] = xacc.v()
 
 
     def evolve(self):
@@ -254,10 +248,9 @@ class Simulation(NullSimulation):
             exit(1)
 
         ## gravitational source terms
-
-        # compute new body forces (could be modified for self-gravity, etc.)
-        yacc_src.v()[:,:] = grav
-        xacc_src.v()[:,:] = 0.
+        xacc, yacc = body_forces.compute(self.cc_data, self.rp)
+        yacc_src.v()[:,:] = yacc.v()
+        xacc_src.v()[:,:] = xacc.v()
 
         # update the conserved hydro variables
         ymom_update = 0.5*self.dt*(dens.d[:,:]*yacc_src.d[:,:] + old_dens.d[:,:]*old_yacc_src.d[:,:])
