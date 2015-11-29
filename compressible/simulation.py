@@ -232,12 +232,15 @@ class Simulation(NullSimulation):
             exit(1)
 
         # gravitational source terms
-        ymom.d[:,:] += 0.5*self.dt*(dens.d[:,:] + old_dens.d[:,:])*grav
+        mom_update = 0.5*self.dt*(dens.d[:,:] + old_dens.d[:,:])*grav
+        ymom.d[:,:] += mom_update
+
+        print("y-momentum update:",np.sum(mom_update))
 
         # TODO: energy update must be replaced with an expression involving the computed mass fluxes
         #       in order to be second-order accurate:
         # N.B.: if grav is time-dependent, then grav must be averaged over the timestep here.
-        energy_update = dtdy*(Flux_y.v(n=self.vars.idens) - Flux_y.jp(1,n=self.vars.idens))*grav*myg.dy
+        energy_update = 0.5*dtdy*(Flux_y.v(n=self.vars.idens) + Flux_y.jp(1,n=self.vars.idens))*grav*myg.dy
         ener.v()[:,:] += energy_update
         
         bad_energy_update=0.5*self.dt*(ymom.d[:,:] + old_ymom.d[:,:])*grav
