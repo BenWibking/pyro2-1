@@ -171,6 +171,13 @@ def unsplitFluxes(my_data, my_aux, rp, vars, solid, tc, dt):
 
     gamma = rp.get_param("eos.gamma")
 
+    # compute gravity source terms
+    grav = rp.get_param("compressible.grav")
+    yacc_src = my_aux.get_var("yacc_src")
+    yacc_src.v()[:,:] = grav
+    my_aux.fill_BC("yacc_src")
+
+
     #=========================================================================
     # compute the primitive variables
     #=========================================================================
@@ -259,6 +266,14 @@ def unsplitFluxes(my_data, my_aux, rp, vars, solid, tc, dt):
     tm_states.end()
 
 
+    # add source terms in primitive variables
+    #V_l[:,:,vars.iu] += 0.5*dt*0.5*(xacc_src.ip(-1,buf=1)+xacc_src.v(buf=1))
+    V_l[1:,:,vars.iv] += 0.5*dt*0.5*(yacc_src.d[0:-1,:]+yacc_src.d[1:,:])
+
+    #V_r[:,:,vars.iu] += 0.5*dt*0.5*(xacc_src.ip(1,buf=1)+xacc_src.v(buf=1))
+    V_r[1:-1,:,vars.iv] += 0.5*dt*0.5*(yacc_src.d[2:,:]+yacc_src.d[1:-1,:])
+
+
     # transform interface states back into conserved variables
     U_xl = myg.scratch_array(vars.nvar)
     U_xr = myg.scratch_array(vars.nvar)
@@ -293,6 +308,14 @@ def unsplitFluxes(my_data, my_aux, rp, vars, solid, tc, dt):
 
     tm_states.end()
 
+    
+    # add source terms in primitive variables
+    #V_l[:,:,vars.iu] += 0.5*dt*0.5*(xacc_src.jp(-1,buf=1)+xacc_src.v(buf=1))
+    V_l[:,1:,vars.iv] += 0.5*dt*0.5*(yacc_src.d[:,0:-1]+yacc_src.d[:,1:])
+
+    #V_r[:,:,vars.iu] += 0.5*dt*0.5*(xacc_src.jp(1,buf=1)+xacc_src.v(buf=1))
+    V_r[:,1:-1,vars.iv] += 0.5*dt*0.5*(yacc_src.d[:,2:]+yacc_src.d[:,1:-1])
+
 
     # transform interface states back into conserved variables
     U_yl = myg.scratch_array(vars.nvar)
@@ -312,33 +335,28 @@ def unsplitFluxes(my_data, my_aux, rp, vars, solid, tc, dt):
 
 
     #=========================================================================
-    # apply source terms
+    # apply source terms (obsolete, now done in primitive variables)
     #=========================================================================
-    grav = rp.get_param("compressible.grav")
 
-    ymom_src = my_aux.get_var("ymom_src")
-    ymom_src.v()[:,:] = dens.v()*grav
-    my_aux.fill_BC("ymom_src")
-
-    E_src = my_aux.get_var("E_src")
-    E_src.v()[:,:] = ymom.v()*grav
-    my_aux.fill_BC("E_src")
+    #E_src = my_aux.get_var("E_src")
+    #E_src.v()[:,:] = ymom.v()*grav
+    #my_aux.fill_BC("E_src")
 
     # ymom_xl[i,j] += 0.5*dt*dens[i-1,j]*grav
-    U_xl.v(buf=1, n=vars.iymom)[:,:] += 0.5*dt*ymom_src.ip(-1, buf=1)
-    U_xl.v(buf=1, n=vars.iener)[:,:] += 0.5*dt*E_src.ip(-1, buf=1)
+    #U_xl.v(buf=1, n=vars.iymom)[:,:] += 0.5*dt*ymom_src.ip(-1, buf=1)
+    #U_xl.v(buf=1, n=vars.iener)[:,:] += 0.5*dt*E_src.ip(-1, buf=1)
 
     # ymom_xr[i,j] += 0.5*dt*dens[i,j]*grav
-    U_xr.v(buf=1, n=vars.iymom)[:,:] += 0.5*dt*ymom_src.v(buf=1)
-    U_xr.v(buf=1, n=vars.iener)[:,:] += 0.5*dt*E_src.v(buf=1)
+    #U_xr.v(buf=1, n=vars.iymom)[:,:] += 0.5*dt*ymom_src.v(buf=1)
+    #U_xr.v(buf=1, n=vars.iener)[:,:] += 0.5*dt*E_src.v(buf=1)
 
     # ymom_yl[i,j] += 0.5*dt*dens[i,j-1]*grav
-    U_yl.v(buf=1, n=vars.iymom)[:,:] += 0.5*dt*ymom_src.jp(-1, buf=1)
-    U_yl.v(buf=1, n=vars.iener)[:,:] += 0.5*dt*E_src.jp(-1, buf=1)
+    #U_yl.v(buf=1, n=vars.iymom)[:,:] += 0.5*dt*ymom_src.jp(-1, buf=1)
+    #U_yl.v(buf=1, n=vars.iener)[:,:] += 0.5*dt*E_src.jp(-1, buf=1)
 
     # ymom_yr[i,j] += 0.5*dt*dens[i,j]*grav
-    U_yr.v(buf=1, n=vars.iymom)[:,:] += 0.5*dt*ymom_src.v(buf=1)
-    U_yr.v(buf=1, n=vars.iener)[:,:] += 0.5*dt*E_src.v(buf=1)
+    #U_yr.v(buf=1, n=vars.iymom)[:,:] += 0.5*dt*ymom_src.v(buf=1)
+    #U_yr.v(buf=1, n=vars.iener)[:,:] += 0.5*dt*E_src.v(buf=1)
 
 
     #=========================================================================

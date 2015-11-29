@@ -88,8 +88,8 @@ class Simulation(NullSimulation):
         # some auxillary data that we'll need to fill GC in, but isn't
         # really part of the main solution
         aux_data = patch.CellCenterData2d(my_grid)
-        aux_data.register_var("ymom_src", bc_yodd)
-        aux_data.register_var("E_src", bc)
+        aux_data.register_var("yacc_src", bc_yodd)
+        #aux_data.register_var("E_src", bc)
         aux_data.create()
         self.aux_data = aux_data
 
@@ -233,7 +233,18 @@ class Simulation(NullSimulation):
 
         # gravitational source terms
         ymom.d[:,:] += 0.5*self.dt*(dens.d[:,:] + old_dens.d[:,:])*grav
-        ener.d[:,:] += 0.5*self.dt*(ymom.d[:,:] + old_ymom.d[:,:])*grav
+
+        # TODO: energy update must be replaced with an expression involving the computed mass fluxes
+        #       in order to be second-order accurate:
+        # N.B.: if grav is time-dependent, then grav must be averaged over the timestep here.
+        energy_update = dtdy*(Flux_y.v(n=self.vars.idens) - Flux_y.jp(1,n=self.vars.idens))*grav*myg.dy
+        ener.v()[:,:] += energy_update
+        
+        bad_energy_update=0.5*self.dt*(ymom.d[:,:] + old_ymom.d[:,:])*grav
+        #ener.d[:,:] += bad_energy_update
+        
+        print("energy update:",np.sum(energy_update))
+        print("old (bad) energy update (not used):",np.sum(bad_energy_update))
 
         # increment the time
         self.cc_data.t += self.dt
