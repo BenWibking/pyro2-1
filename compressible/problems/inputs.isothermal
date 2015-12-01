@@ -13,8 +13,8 @@ dt_out = 0.01
 [mesh]
 nx = 128
 ny = 256
-xmax = .1
-ymax = .2
+xmax = 1.0
+ymax = 2.0
 
 xlboundary = periodic
 xrboundary = periodic
@@ -29,7 +29,7 @@ yrboundary = reflect
 [isothermal]
 dens1 = 10.0
 
-amp = 0.5
+amp = 0.01
 nwaves = 4
 
 cs = 0.1

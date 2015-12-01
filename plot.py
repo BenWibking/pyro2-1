@@ -20,7 +20,7 @@ def makeplot(myd, solver_name, outfile, W, H):
 
     sim.dovis()
     plt.savefig(outfile)
-    plt.show()
+#    plt.show()
 
 
 def usage():
