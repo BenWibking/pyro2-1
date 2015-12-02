@@ -23,7 +23,10 @@ def compute(my_data, rp):
     xmax = rp.get_param("mesh.xmax")
     ymax = rp.get_param("mesh.ymax")
 
-    py_raytrace_grid(dens.v(),Fx,Fy,E,myg.nx,myg.ny,xmax,ymax,kappa,I,nangles)
+    if I>0:
+        py_raytrace_grid(dens.v(),Fx,Fy,E,myg.nx,myg.ny,xmax,ymax,kappa,I,nangles)
+    else:
+        print("WARNING: surface intensity is not positive (I=",I,")")
 
     xacc = myg.scratch_array()
     yacc = myg.scratch_array()
