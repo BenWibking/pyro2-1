@@ -49,22 +49,6 @@ def init_data(my_data, rp):
     smallpres = 1.e-10
     smalldens = smallpres/(cs**2)
 
-    # initialize the components, remember, that ener here is
-    # rho*eint + 0.5*rho*v**2, where eint is the specific
-    # internal energy (erg/g)
-    xmom.d[:,:] = 0.0
-    ymom.d[:,:] = 0.0
-    dens.d[:,:] = 0.0
-
-    # set the density to be stratified in the y-direction
-    myg = my_data.grid
-
-    p = myg.scratch_array()
-
-    dens.d[:,:] = dens1*numpy.exp(-myg.y2d/scale_height)
-    dens.d[dens.d < smalldens] = smalldens
-    p.d[:,:] = dens.d * cs**2 / gamma
-
     # compute optical depth
     kappa = 1.0
     c = 1.0
@@ -87,20 +71,47 @@ def init_data(my_data, rp):
     print("eddington_ratio:",eddington_ratio)
     print("net accel:",net_accel)
 
-    # set the velocity perturbations
-    u = 0.
+    # initialize the components, remember, that ener here is
+    # rho*eint + 0.5*rho*v**2, where eint is the specific
+    # internal energy (erg/g)
+    xmom.d[:,:] = 0.0
+    ymom.d[:,:] = 0.0
+    dens.d[:,:] = 0.0
 
-    A = amp*numpy.random.rand(dens.d.shape[0],dens.d.shape[1])
-#    v = A*(1+numpy.cos(nwaves*numpy.pi*myg.x2d/xmax))*0.5
-    v = A*(numpy.cos(nwaves*numpy.pi*myg.x2d/xmax))*0.5
+    if rp.get_param('restart.flag') != 0:
+        # reload simulation state from file
+        grid,cells = patch.read(rp.get_param('restart.snapshot'))
+        dens.d[:,:] = cells.get_var('density').d
+        xmom.d[:,:] = cells.get_var('x-momentum').d
+        ymom.d[:,:] = cells.get_var('y-momentum').d
+        ener.d[:,:] = cells.get_var('energy').d
+        
+        ## must set time!!
+        my_data.t = cells.t
+    else:
+        # set the density to be stratified in the y-direction
+        myg = my_data.grid
 
-    # set the momenta
-    xmom.d[:,:] = dens.d * u
-    ymom.d[:,:] = dens.d * v
+        p = myg.scratch_array()
 
-    # set the energy (P = cs2*dens/gamma)
-    ener.d[:,:] = p.d[:,:]/(gamma - 1.0) + \
-        0.5*(xmom.d[:,:]**2 + ymom.d[:,:]**2)/dens.d[:,:]
+        dens.d[:,:] = dens1*numpy.exp(-myg.y2d/scale_height)
+        dens.d[dens.d < smalldens] = smalldens
+        p.d[:,:] = dens.d * cs**2 / gamma
+
+        # set the velocity perturbations
+        u = 0.
+
+        A = amp*numpy.random.rand(dens.d.shape[0],dens.d.shape[1])
+        #    v = A*(1+numpy.cos(nwaves*numpy.pi*myg.x2d/xmax))*0.5
+        v = A*(numpy.cos(nwaves*numpy.pi*myg.x2d/xmax))*0.5
+
+        # set the momenta
+        xmom.d[:,:] = dens.d * u
+        ymom.d[:,:] = dens.d * v
+
+        # set the energy (P = cs2*dens/gamma)
+        ener.d[:,:] = p.d[:,:]/(gamma - 1.0) + \
+            0.5*(xmom.d[:,:]**2 + ymom.d[:,:]**2)/dens.d[:,:]
 
 
 def finalize():

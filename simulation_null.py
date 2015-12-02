@@ -85,8 +85,7 @@ class NullSimulation(object):
         except:
             self.verbose = None
 
-        self.n_num_out = 0
-
+        self.t_last_out = 0.
             
     def finished(self):
         """
@@ -103,9 +102,9 @@ class NullSimulation(object):
         n_out = self.rp.get_param("io.n_out")
         do_io = self.rp.get_param("io.do_io")
         
-        is_time = self.cc_data.t >= (self.n_num_out + 1)*dt_out or self.n%n_out == 0
+        is_time = self.cc_data.t >= (self.t_last_out+dt_out) or self.n%n_out == 0
         if is_time and do_io == 1:
-            self.n_num_out += 1
+            self.t_last_out = self.cc_data.t
             return True
         else:
             return False

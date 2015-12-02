@@ -39,6 +39,9 @@ nx = 25                   ; number of zones in the x-direction
 ny = 25                   ; number of zones in the y-direction
 
 
-
+[restart]
+flag = 0
+snapshot = none
+n = 0
 
 
