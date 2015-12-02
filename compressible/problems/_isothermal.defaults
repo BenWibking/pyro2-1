@@ -1,8 +1,8 @@
 [isothermal]
-dens1 = 10.0
+dens1 = 100.0
 
-amp = 1.0
+amp = 0.01
 nwaves = 4.0
 
 cs = 0.1
-
+eddington = 0.8

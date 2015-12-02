@@ -149,16 +149,15 @@ class Simulation(NullSimulation):
         # (otherwise the sound speed acquires variations just due to action of the floors)
 
         cs = self.rp.get_param("isothermal.cs")
+        gamma = self.cc_data.get_aux("gamma")
 
         smallp = 1.e-10
-        smalldens = smallp/(cs**2)
+        smalldens = gamma*smallp/(cs**2) # times gamma?
 
         dens = self.cc_data.get_var("density")
         ymom = self.cc_data.get_var("y-momentum")
         xmom = self.cc_data.get_var("x-momentum")
         ener = self.cc_data.get_var("energy")
-
-        gamma = self.cc_data.get_aux("gamma")
 
         # convert to primitive variables
         u = xmom.d[:,:]/dens.d[:,:]

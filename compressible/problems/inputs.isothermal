@@ -2,19 +2,19 @@
 
 [driver]
 max_steps = 50000
-tmax = 10.0
+tmax = 100.0
 
 
 [io]
 basename = iso_
 n_out = 10000
-dt_out = 0.01
+dt_out = 0.05
 
 [mesh]
 nx = 128
-ny = 256
+ny = 384
 xmax = 1.0
-ymax = 2.0
+ymax = 3.0
 
 xlboundary = periodic
 xrboundary = periodic
@@ -27,13 +27,13 @@ yrboundary = reflect
 
 
 [isothermal]
-dens1 = 10.0
+dens1 = 100.0
+eddington = 0.8
 
 amp = 0.01
 nwaves = 4
 
 cs = 0.1
-
 
 [driver]
 cfl = 0.5

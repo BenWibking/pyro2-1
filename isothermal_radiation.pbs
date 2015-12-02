@@ -1,0 +1,14 @@
+#PBS -A PCON0003
+#PBS -l walltime=10:00:00
+#PBS -l nodes=1
+#PBS -N isothermal_radiation
+#PBS -m abe
+#PBS -j oe
+
+set -x
+
+cd $PBS_O_WORKDIR
+
+export OMP_NUM_THREADS=20
+
+python -u pyro.py compressible isothermal inputs.isothermal

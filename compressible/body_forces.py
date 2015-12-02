@@ -10,24 +10,30 @@ def compute(my_data, rp):
     dens = my_data.get_var("density")
     grav = rp.get_param("compressible.grav")
 
-    c = 1.0
-    kappa = 1.0
-    I = 0.5
+    c = my_data.get_aux("speed_of_light")
+    kappa = my_data.get_aux("opacity")
+    I = my_data.get_aux("surface_brightness")
 
     nangles = myg.nx/2
 
     Fx = np.zeros((myg.nx,myg.ny))
     Fy = np.zeros((myg.nx,myg.ny))
+    E = np.zeros((myg.nx,myg.ny))
 
     xmax = rp.get_param("mesh.xmax")
     ymax = rp.get_param("mesh.ymax")
 
-    py_raytrace_grid(dens.v(),Fx,Fy,myg.nx,myg.ny,xmax,ymax,kappa,I,nangles)
+    py_raytrace_grid(dens.v(),Fx,Fy,E,myg.nx,myg.ny,xmax,ymax,kappa,I,nangles)
 
     xacc = myg.scratch_array()
     yacc = myg.scratch_array()
 
     xacc.v()[:,:] = kappa*Fx/c
     yacc.v()[:,:] = grav + kappa*Fy/c
+
+    # compute mass-weighted acceleration
+    weighted_acc = yacc.v()*dens.v()
+    mean_weighted_acc = np.sum(weighted_acc)/np.sum(dens.v())
+    print("density-weighted net acceleration:",mean_weighted_acc)
 
     return xacc, yacc
